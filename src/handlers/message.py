@@ -17,14 +17,24 @@ async def handle_message_event(event: MessageEvent):
         await line_service.reply_text(event.reply_token, translated)
         return
 
-    # 1. 偵測是否為「設定語言」意圖
-    detected_lang = await gemini_service.detect_setting_intent(user_text)
-    if detected_lang:
-        await db_service.set_user_pref(group_id, user_id, detected_lang)
-        await line_service.reply_text(
-            event.reply_token, 
-            f"👌 沒問題！我記住了，之後我會將別人的訊息翻譯成 {detected_lang} 給你閱讀。"
-        )
+    # 1. 檢查是否為指令 (以 ! 或 ！ 開頭)
+    if user_text.startswith('!') or user_text.startswith('！'):
+        command_text = user_text[1:].strip()
+        
+        # 呼叫 Gemini 解析語言
+        detected_lang = await gemini_service.parse_command_language(command_text)
+        
+        if detected_lang:
+            await db_service.set_user_pref(group_id, user_id, detected_lang)
+            await line_service.reply_text(
+                event.reply_token, 
+                f"🙆‍♂️ 收到！已將您的閱讀語言設定為：{detected_lang}"
+            )
+        else:
+            await line_service.reply_text(
+                event.reply_token, 
+                "❓ 抱歉，我聽不懂這個語言設定。請試試：\n! 我想看繁體中文\n! Set to English"
+            )
         return
 
     # 2. 執行翻譯邏輯

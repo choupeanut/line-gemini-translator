@@ -1,0 +1,12 @@
+.env
+.git
+.gitignore
+__pycache__
+*.pyc
+tests/
+data/
+.pytest_cache/
+.vscode
+.idea
+README.md
+GEMINI.md

@@ -1,11 +1,17 @@
 services:
   app:
-    build: .
-    volumes:
-      - .:/app
+    image: peanutchou/line-gemini-translator-app:latest
+    container_name: line-gemini-translator
+    restart: always
     ports:
       - "8000:8000"
-    env_file:
-      - .env
+    volumes:
+      # 持久化儲存：將主機的 data 資料夾掛載到容器內
+      # 確保重啟後使用者的語言設定不會遺失
+      - ./data:/app/data
     environment:
-      - ENV=dev
+      # 直接讀取系統環境變數
+      - LINE_CHANNEL_SECRET=${LINE_CHANNEL_SECRET}
+      - LINE_CHANNEL_ACCESS_TOKEN=${LINE_CHANNEL_ACCESS_TOKEN}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - APP_PORT=8000

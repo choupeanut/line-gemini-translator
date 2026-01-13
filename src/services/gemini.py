@@ -6,27 +6,28 @@ class GeminiService:
     def __init__(self):
         # 初始化新的 Client
         self.client = genai.Client(api_key=settings.gemini_api_key)
-        # 設定模型名稱，目前使用穩定的 1.5 Flash
-        self.model_name = 'gemini-1.5-flash'
+        # 設定模型名稱，使用 Gemini 3 Flash Preview
+        self.model_name = 'gemini-3-flash-preview'
         
-    async def detect_setting_intent(self, text: str) -> str | None:
+    async def parse_command_language(self, text: str) -> str | None:
         """
-        偵測使用者是否在設定語言。
+        解析指令中的目標語言。
+        已知 text 是一個設定指令（已移除 ! 前綴）。
         """
         prompt = (
-            "Analyze the following text to see if the user wants to set their preferred reading language. "
-            "If they are setting a language, output ONLY the language name in English (e.g., 'Thai', 'Traditional Chinese', 'English'). "
-            "If they are NOT setting a language, output 'NONE'.\n\n"
-            f"Text: {text}"
+            "The user is issuing a command to set their preferred reading language. "
+            "Extract the target language from the text. "
+            "Output ONLY the language name in English (e.g., 'Thai', 'Traditional Chinese', 'English'). "
+            "If the text does not contain a valid language setting request, output 'NONE'.\n\n"
+            f"Command Text: {text}"
         )
         try:
-            # 新版 SDK 的 Async 呼叫方式
             response = await self.client.aio.models.generate_content(
                 model=self.model_name,
                 contents=prompt
             )
-            result = response.text.strip().upper()
-            return None if "NONE" in result else response.text.strip()
+            result = response.text.strip()
+            return None if "NONE" in result.upper() else result
         except Exception as e:
             print(f"Gemini Intent Error: {e}")
             return None
